@@ -1,0 +1,24 @@
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Test reports and outputs
+test-results/
+mobilewright-report/
+*.log
+
+# App binaries (APKs, IPAs, AABs)
+*.apk
+*.ipa
+*.aab
+app/**/*.apk
+app/**/*.ipa
+app/**/*.aab
+
+# OS files
+.DS_Store
+Thumbs.db
