@@ -2,7 +2,12 @@ const { OnboardingPage } = require('./onboarding-page');
 const { SignInPage } = require('./sign-in-page');
 const { PinPage } = require('./pin-page');
 const { present } = require('./locator-utils');
-const { getApiCredentials } = require('../test-data/credentials');
+const { getStagingApiCredentials, getProdApiCredentials } = require('../test-data/credentials');
+
+// Mirrors utils/global-setup.js's toggle — see the comment there for why
+// PROD is still the default. Kept in sync so a test that hits the sign-in
+// branch below signs into whichever account setup actually configured.
+const useStaging = process.env.STAGING === '1';
 
 /**
  * The standard precondition guard for any test that needs a working session
@@ -34,7 +39,11 @@ async function ensureSignedIn(screen) {
 
     const onboarding = new OnboardingPage(screen);
     await onboarding.complete();
-    await signIn.signInWithApiKey(getApiCredentials());
+    // If useStaging, relies on utils/global-setup.js having already switched
+    // the app to Staging once for the whole run — that preference lives in
+    // the app's own local storage, so it survives the sign-out this branch
+    // is handling.
+    await signIn.signInWithApiKey(useStaging ? getStagingApiCredentials() : getProdApiCredentials());
     await pin.setUp();
 }
 

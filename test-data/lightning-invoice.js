@@ -1,5 +1,5 @@
 const crypto = require('node:crypto');
-const { getApiCredentials } = require('./credentials');
+const { getProdApiCredentials } = require('./credentials');
 
 const USD_AMOUNT = 5;
 const MIN_BTC_AMOUNT = 0.000001;
@@ -64,9 +64,11 @@ async function getBtcUsdPrice() {
  * use as the withdrawal destination address in the withdrawal test (the app
  * validates the invoice client-side and won't accept a fabricated one — see
  * WithdrawAddressPage). Signs authenticated requests against Bitfinex's
- * production REST API with the same BFX_PROD_FULL_API_KEY/SECRET credentials
- * global-setup.js signs in with (see credentials.js). This only requests a
- * receiving invoice — no funds are moved by this call.
+ * production REST API with the BFX_PROD_FULL_API_KEY/SECRET credentials —
+ * deliberately not the BFX_STAGING_API_KEY/SECRET pair global-setup.js signs
+ * the app's UI in with, since api.bitfinex.com is prod-only regardless of
+ * which backend the app itself is pointed at (see credentials.js). This only
+ * requests a receiving invoice — no funds are moved by this call.
  *
  * Initializes Lightning on the exchange wallet first (POST
  * /v2/auth/w/deposit/address, method LNX): invoice creation fails on an
@@ -74,7 +76,7 @@ async function getBtcUsdPrice() {
  * documents this init call as safe to repeat once already set up.
  */
 async function generateLightningWithdrawalInvoice() {
-    const credentials = getApiCredentials();
+    const credentials = getProdApiCredentials();
 
     await postAuth('v2/auth/w/deposit/address', { wallet: 'exchange', method: 'LNX' }, credentials);
 
