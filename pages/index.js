@@ -21,4 +21,5 @@ module.exports = {
     ...require('./withdraw-address-page'),
     ...require('./withdraw-compliance-page'),
     ...require('./auth-flow'),
+    ...require('./staging-flow'),
 };

@@ -18,6 +18,16 @@ class WithdrawAddressPage extends BasePage {
         return this.screen.getByTestId('withdrawal_note_input');
     }
 
+    /**
+     * Static label right above noteInput. Used to blur it and dismiss the
+     * keyboard — unlike titleText (top of screen), this stays inside the
+     * viewport even once the multi-line note field's focus pans/resizes the
+     * screen, so the tap can't land on the keyboard instead of the label.
+     */
+    get noteLabel() {
+        return this.screen.getByText('Internal note');
+    }
+
     /** getByLabel matches the row container, whose bounds start at the tick-box glyph. */
     get termsCheckbox() {
         return this.screen.getByLabel(

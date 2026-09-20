@@ -1,12 +1,24 @@
 const { execSync } = require('node:child_process');
 require('dotenv/config');
 const { android, loadConfig, expect } = require('mobilewright');
-const { OnboardingPage, SignInPage, PinPage, WatchlistPage } = require('../pages');
-const { requireCredentials, getApiCredentials } = require('../test-data/credentials');
+const { OnboardingPage, SignInPage, PinPage, WatchlistPage, switchToStaging } = require('../pages');
+const {
+    requireStagingCredentials, getStagingApiCredentials,
+    requireProdCredentials, getProdApiCredentials,
+} = require('../test-data/credentials');
 const { RUNTIME_PERMISSIONS } = require('../test-data/permissions');
 const { patchDumpRetry } = require('./dump-retry');
 
 const MAX_ATTEMPTS = 3;
+
+// PROD and Staging are different account systems — the account these tests'
+// assertions are built around (specific username, deposit history, verified
+// name) only exists on PROD, confirmed empirically: signing into Staging
+// with it just sits on the login form. Staging support (pages/staging-flow.js,
+// scripts/preflight-staging.js) stays in the repo for whenever a matching
+// Staging account/test data exists, but PROD remains the default until then.
+// Opt in with: STAGING=1 npx mobilewright test
+const useStaging = process.env.STAGING === '1';
 
 /**
  * Everything below that shells out to `adb` only exists for local
@@ -109,14 +121,27 @@ async function signUpAndSetPin(bundleId, config, deviceName) {
         const serial = cloud ? null : resolveAdbSerial(deviceName);
         const label = serial ?? 'cloud';
         if (cloud) {
-            try {
-                await device.uninstallApp(bundleId);
-                console.log(`[setup:${label}] Uninstalled ${bundleId}`);
-            } catch {
-                console.log(`[setup:${label}] App not installed, skipping uninstall`);
-            }
-            for (const appPath of [].concat(config.use?.installApps ?? [])) {
-                await device.installApp(appPath);
+            const cloudApps = [].concat(config.use?.installApps ?? []);
+            // Only wipe the app when there's something to put back. Mobile Next
+            // reinstalls from installApps, but on BrowserStack the app arrives
+            // with the session itself (the driver's `app` capability) and there
+            // are no installApps to reinstall from — and its installApp() no-ops
+            // for a ref that's already the session app, so an uninstall there
+            // would leave nothing to launch ("Unable to resolve the launchable
+            // activity"). Each cloud session is a fresh device anyway, so the
+            // clean state the uninstall exists to guarantee is already there.
+            if (cloudApps.length > 0) {
+                try {
+                    await device.uninstallApp(bundleId);
+                    console.log(`[setup:${label}] Uninstalled ${bundleId}`);
+                } catch {
+                    console.log(`[setup:${label}] App not installed, skipping uninstall`);
+                }
+                for (const appPath of cloudApps) {
+                    await device.installApp(appPath);
+                }
+            } else {
+                console.log(`[setup:${label}] Using the app preinstalled with the session`);
             }
         } else {
             grantPermissions(bundleId, serial);
@@ -132,7 +157,17 @@ async function signUpAndSetPin(bundleId, config, deviceName) {
         const watchlist = new WatchlistPage(screen);
 
         await onboarding.complete();
-        await signIn.signInWithApiKey(getApiCredentials());
+
+        // Every Maestro suite switches to Staging before signing in (see
+        // components/setup/select_server.yaml in btx-maestro) — but only
+        // opt into that here once there's a Staging account with matching
+        // test data (see the useStaging comment above). Until then this
+        // stays on the app's default backend (PROD) with the PROD account.
+        if (useStaging) {
+            await switchToStaging(screen);
+        }
+
+        await signIn.signInWithApiKey(useStaging ? getStagingApiCredentials() : getProdApiCredentials());
 
         await expect(pin.createPinPrompt).toBeVisible({ timeout: 20_000 });
         await pin.setUp();
@@ -177,7 +212,11 @@ async function signUpAndSetPin(bundleId, config, deviceName) {
  * mobilewright.config.js until that's ready.
  */
 module.exports = async function globalSetup() {
-    requireCredentials();
+    if (useStaging) {
+        requireStagingCredentials();
+    } else {
+        requireProdCredentials();
+    }
     const config = await loadConfig(process.cwd());
 
     // mobilewright.config.js in this repo is hard-configured as a single flat
