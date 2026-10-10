@@ -96,7 +96,10 @@ BROWSERSTACK=1 npx mobilewright test  # BrowserStack App Automate (needs BROWSER
 ```
 
 The local path resolves the APK dynamically (`getApkPath('./app/android')` — first `.apk` file found in
-that directory, so don't drop more than one APK there); BrowserStack prefers an already-uploaded
+that directory, so don't drop more than one APK there). The path it returns must stay **absolute**:
+installs are an RPC to the long-running mobilecli server, which runs `adb install` from its own working
+directory, so a relative path only works when that server happened to start in the project root
+(`adb: failed to stat ./app/android/...` otherwise); BrowserStack prefers an already-uploaded
 `bs://<app-id>` (`BROWSERSTACK_APP`) over re-uploading the ~290MB APK on every run.
 
 **`pages/`** is the Page Object Model layer — one class per screen, each constructed with the `screen`

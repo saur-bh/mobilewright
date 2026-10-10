@@ -1,6 +1,7 @@
 const { HomePage } = require('./home-page');
 const { AccountMenuPage } = require('./account-menu-page');
 const { OnboardingPage } = require('./onboarding-page');
+const { SignInPage } = require('./sign-in-page');
 const { present } = require('./locator-utils');
 
 /**
@@ -35,7 +36,7 @@ async function switchToStaging(screen) {
  * shorter per-step timeouts, which assume a warm, already-loaded screen.
  */
 async function waitForRestartToSettle(screen, onboarding, timeoutMs = 30_000) {
-    const signInLink = screen.getByRole('text', { name: 'Sign in' });
+    const { signInLink } = new SignInPage(screen);
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
         if (await present(onboarding.continueButton)) return;
