@@ -2,8 +2,9 @@ const { BasePage } = require('./base-page');
 
 /** The sign-in screen and its "Sign in with API Key" sub-flow. */
 class SignInPage extends BasePage {
+    /** Signed-out Home's entry button — "Sign in" on older builds, "Log in" on newer ones. */
     get signInLink() {
-        return this.screen.getByRole('text', { name: 'Sign in' });
+        return this.screen.getByRole('text', { name: /^(Sign in|Log in)$/ });
     }
 
     get apiKeyOption() {
