@@ -1,7 +1,8 @@
 {
   "devDependencies": {
-    "@mobilewright/test": "0.0.51",
+    "@browserstack/mobilewright": "^0.1.1",
+    "@mobilewright/test": "0.0.58",
     "dotenv": "^17.4.2",
-    "mobilewright": "0.0.51"
+    "mobilewright": "0.0.58"
   }
 }

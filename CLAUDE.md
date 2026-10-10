@@ -66,12 +66,19 @@ STAGING=1 npx mobilewright test    # Staging backend, Staging account
 This is a real, empirically-confirmed account split, not just an env-var naming choice: signing into
 Staging with the PROD account's keys was tested directly and just sits on the login form — PROD and
 Staging are separate account systems. Since the Staging account ported over from btx-maestro has none of
-the PROD account's seeded data, running with `STAGING=1` today fails every assertion in
-`tests/postLogin.spec.js` that checks account-specific state (the signed-in username, a specific deposit
-by date, a verified name) — only the two tests that don't touch that data (watchlist, nav bar) pass. Use
-`STAGING=1` once there's a Staging account seeded to match, or when adding a new Staging-only test;
-otherwise leave it unset. `utils/global-setup.js` and `pages/auth-flow.js` both read this same toggle —
-keep them in sync if you change how it's read.
+the PROD account's seeded data, `STAGING=1` today still fails every assertion in `tests/postLogin.spec.js`
+that checks account-specific state (the signed-in username, a specific deposit by date, a verified name)
+— watchlist, nav bar, and Buy Crypto pass; Home, Deposit, and Withdraw don't yet. Use `STAGING=1` once
+there's a Staging account seeded to match, or when adding a new Staging-only test; otherwise leave it
+unset. `utils/global-setup.js` and `pages/auth-flow.js` both read this same toggle — keep them in sync if
+you change how it's read.
+
+Staging also differs from PROD in ways that have nothing to do with account data: Bitcoin's Mercuryo
+wallet is under maintenance on Staging (confirmed via the app's own on-screen banner, "Wallet for BTC is
+currently under maintenance"), which leaves `MercuryoPage.walletAddressText` permanently empty for BTC
+there. The Buy Crypto test picks Ethereum instead when `STAGING=1` — see the `useStaging` branch around
+`mercuryo.assetPickerItem()`. If a future Staging-only test needs a different environment-specific
+workaround, follow that same pattern (branch on the toggle, don't change the PROD default path).
 
 ## Architecture
 

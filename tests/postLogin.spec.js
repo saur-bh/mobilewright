@@ -111,9 +111,19 @@ test.describe('Authenticated session', () => {
         await buyCrypto.mercuryoRadio.tap();
         await expect(mercuryo.titleText).toBeVisible();
 
-        // Step 5-6: open the asset picker on the default Bitcoin selection, then dismiss it
-        await mercuryo.buyAssetButton.tap();
-        await mercuryo.assetPickerCloseButton.tap();
+        // Step 5-6: open the asset picker on the default Bitcoin selection.
+        // On Staging, Bitcoin's wallet is under maintenance (confirmed via
+        // the app's own on-screen banner: "Wallet for BTC is currently
+        // under maintenance"), which leaves walletAddressText below
+        // permanently empty — switch to Ethereum there instead. On PROD,
+        // Bitcoin works fine, so just dismiss the picker as before.
+        const useStaging = process.env.STAGING === '1';
+        await mercuryo.assetButton('Bitcoin').tap();
+        if (useStaging) {
+            await mercuryo.assetPickerItem('Ethereum').tap();
+        } else {
+            await mercuryo.assetPickerCloseButton.tap();
+        }
         await expect(mercuryo.titleText).toBeVisible();
 
         // Step 7: record the min/max range shown for the selected asset

@@ -6,12 +6,21 @@ class MercuryoPage extends BasePage {
         return this.screen.getByRole('text', { name: 'Mercuryo' });
     }
 
-    /** The "Buy" asset selector — tapping it opens the asset-picker bottom sheet. */
-    get buyAssetButton() {
-        return this.screen.getByRole('text', { name: 'Bitcoin' });
+    /**
+     * The "Buy" asset selector — tapping it opens the asset-picker bottom
+     * sheet. Its label is whatever asset is currently selected (Bitcoin by
+     * default), so pass that in rather than hardcoding it.
+     */
+    assetButton(name = 'Bitcoin') {
+        return this.screen.getByRole('text', { name });
     }
 
-    /** Closes the asset-picker bottom sheet opened by buyAssetButton. */
+    /** An asset row inside the open picker (e.g. "Ethereum"). */
+    assetPickerItem(name) {
+        return this.screen.getByRole('text', { name });
+    }
+
+    /** Closes the asset-picker bottom sheet opened by assetButton() without picking anything. */
     get assetPickerCloseButton() {
         return this.screen.getByTestId('IconButton-Cross');
     }
@@ -33,9 +42,15 @@ class MercuryoPage extends BasePage {
         return this.screen.getByRole('text', { name: /^Min [\d.]+ - Max [\d.]+/ });
     }
 
-    /** The base58 deposit address shown for the selected asset. */
+    /**
+     * The deposit address shown for the selected asset — base58 (Bitcoin) or
+     * 0x-prefixed hex (Ethereum and other EVM assets); confirmed against a
+     * real Ethereum address live, since it's the one used on Staging (see
+     * the STAGING branch in the Buy Crypto test: BTC's wallet is under
+     * maintenance there, confirmed via the app's own on-screen banner).
+     */
     get walletAddressText() {
-        return this.screen.getByRole('text', { name: /^[1-9A-HJ-NP-Za-km-z]{25,64}$/ });
+        return this.screen.getByRole('text', { name: /^(0x[0-9A-Fa-f]{40}|[1-9A-HJ-NP-Za-km-z]{25,64})$/ });
     }
 
     /** Opens the MercuryoTosPage notice modal. */
